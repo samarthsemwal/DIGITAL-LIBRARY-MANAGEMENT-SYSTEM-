@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Welcome Admin, {{ username }} 👨‍💼</h3>
+<hr>
+
+<div class="mb-3 d-flex justify-content-between align-items-center">
+  <h5>Book Management</h5>
+  <button class="btn btn-success" id="addBookBtn">+ Add New Book</button>
+</div>
+
+<table class="table table-striped">
+  <thead>
+    <tr><th>ID</th><th>Title</th><th>Author</th><th>Category</th><th>Copies</th><th>Action</th></tr>
+  </thead>
+  <tbody id="book-table"></tbody>
+</table>
+
+<h5 class="mt-5">Borrow Records</h5>
+<table class="table table-bordered">
+  <thead>
+    <tr><th>ID</th><th>User ID</th><th>Book ID</th><th>Borrow Date</th><th>Return Date</th></tr>
+  </thead>
+  <tbody>
+    {% for r in records %}
+      <tr><td>{{ r.id }}</td><td>{{ r.user_id }}</td><td>{{ r.book_id }}</td><td>{{ r.borrow_date }}</td><td>{{ r.return_date or 'Not Returned' }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function loadBooks(){
+  $.get('/books/list', function(data){
+    $('#book-table').empty();
+    data.forEach(b => {
+      $('#book-table').append(`
+        <tr>
+          <td>${b.id}</td>
+          <td>${b.title}</td>
+          <td>${b.author}</td>
+          <td>${b.category_name}</td>
+          <td>${b.available_copies}</td>
+          <td>
+            <button class='btn btn-sm btn-danger' onclick='deleteBook(${b.id})'>Delete</button>
+          </td>
+        </tr>`);
+    });
+  });
+}
+
+function deleteBook(id){
+  if(confirm('Delete this book?')){
+    $.ajax({ url: '/books/delete/' + id, type: 'DELETE', success: function(){ loadBooks(); }});
+  }
+}
+
+$('#addBookBtn').click(function(){
+  const title = prompt('Book title:');
+  const author = prompt('Author:');
+  const category_id = prompt('Category ID:');
+  const copies = prompt('Available copies:', 1);
+  if(title && author && category_id){
+    $.ajax({
+      url: '/books/add',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({ title, author, category_id, available_copies: copies }),
+      success: function(){ alert('Book added!'); loadBooks(); }
+    });
+  }
+});
+
+$(document).ready(loadBooks);
+</script>
+{% endblock %}

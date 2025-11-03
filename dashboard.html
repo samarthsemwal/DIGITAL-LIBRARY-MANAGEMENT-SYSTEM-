@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Welcome, {{ username }} 🎓</h3>
+<hr>
+<div class="mb-3">
+  <input id="search" class="form-control" placeholder="Search books by title, author, or category...">
+</div>
+
+<div id="book-list" class="row">
+  {% for book in books %}
+  <div class="col-md-3 mb-4 book-item">
+    <div class="card p-3 shadow-sm">
+      <h5>{{ book.title }}</h5>
+      <p>Author: {{ book.author }}</p>
+      <p><small>Category: {{ book.category_name }}</small></p>
+      <p>Available: {{ book.available_copies }}</p>
+      <button class="btn btn-primary borrow-btn" data-id="{{ book.id }}">Borrow</button>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- 💬 Chatbot Floating Button -->
+<button id="chatbotToggle" class="chatbot-btn">💬</button>
+
+<!-- Chatbot Floating Window -->
+<div id="chatbotContainer" class="chatbot-container hidden">
+  <div class="chatbot-header">
+    <span>AI Library Assistant 🤖</span>
+    <button id="chatbotClose">✖</button>
+  </div>
+  <div id="chatMessages" class="chatbot-messages"></div>
+  <div class="chatbot-input">
+    <input type="text" id="chatInput" placeholder="Type your question..." />
+    <button id="sendMessage">Send</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // 🔍 Book Search Filter
+  $('#search').on('input', function(){
+    const q = $(this).val().toLowerCase();
+    $('.book-item').each(function(){
+      const text = $(this).text().toLowerCase();
+      $(this).toggle(text.includes(q));
+    });
+  });
+
+  // 📚 Borrow Book
+  $('.borrow-btn').on('click', function() {
+    const id = $(this).data('id');
+    $.post(`/borrow/book/${id}`, {}, function(res){
+      alert(res.message || res.error);
+      location.reload();
+    });
+  });
+</script>
+
+
+
+
+
+<!-- Include external chatbot.js for cleaner code -->
+<script src="{{ url_for('static', filename='chatbot.js') }}"></script>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+{% endblock %}
